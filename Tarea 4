@@ -1,0 +1,31 @@
+The team want to look in more detail at meat and dairy products where the average units sold was greater than ten.
+Write a query to return the product_id , price and average_units_sold of the rows of interest to the team.
+
+SOLUICON:
+SELECT product_id, price, average_units_sold
+FROM public.products
+WHERE product_type IN ('Meat', 'Dairy') and public.products.average_units_sold > 10
+;
+
+SOLUCION 2 ESTANDARIZADA
+
+WITH clean_products AS (
+    SELECT
+        product_id::INTEGER AS product_id,
+        COALESCE(product_type, 'Unknown') AS product_type,
+        ROUND(
+              COALESCE(
+                price::NUMERIC,
+                (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price::NUMERIC) FROM public.products)
+              )::NUMERIC, 2
+        ) AS price,
+        COALESCE(average_units_sold, 0)::INTEGER AS average_units_sold
+      FROM public.products
+)
+SELECT
+    product_id,
+    price,
+    average_units_sold
+FROM clean_products
+WHERE product_type IN ('Meat', 'Dairy')
+  AND average_units_sold > 10;
