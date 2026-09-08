@@ -1,0 +1,30 @@
+To find out how the range varies for each product type, your manager has asked you to determine the minimum and maximum values for each
+product type.
+
+SOLUCION:
+
+SELECT product_type, MIN(price) as min_price, MAX(price) as max_price
+FROM public.products
+Group BY product_type
+
+Solucion 2 estandarizada:
+SELECT
+    COALESCE(product_type, 'Unknown') AS product_type,
+    MIN(
+        ROUND(
+              COALESCE(
+                  price::NUMERIC,
+                  (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price::NUMERIC) FROM public.products)
+        )::NUMERIC, 2
+      )
+    ) AS min_price,
+    MAX(
+        ROUND(
+              COALESCE(
+                price::NUMERIC,
+                (SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY price::NUMERIC) FROM public.products)
+        )::NUMERIC, 2
+    )
+  ) AS max_price
+FROM public.products
+GROUP BY COALESCE(product_type, 'Unknown');
